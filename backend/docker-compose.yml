@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16  # 18 대신 16 사용
+    container_name: inflearn-clone-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prismapass
+      POSTGRES_DB: inflearn_clone
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # 새 볼륨 이름
+
+volumes:
+  postgres_data:  # 새 볼륨 이름
