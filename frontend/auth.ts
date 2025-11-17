@@ -3,6 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/prisma";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { comparePassword } from "./lib/password-util";
+import * as jwt from "jsonwebtoken";
+import { JWT } from "next-auth/jwt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   useSecureCookies: process.env.NODE_ENV === "production",
@@ -49,6 +51,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt",
   },
+  //이거 안하면 나중에 encoding decoding을 따로 지정안하면 next에서 사용하는걸 사용하기에 에러남
+  jwt: {
+		encode: async ({ token, secret }) => {
+			return jwt.sign(token as jwt.JwtPayload, secret as string);
+		},
+		decode: async ({ token, secret }) => {
+			return jwt.verify(token as string, secret as string) as 
+			JWT;
+		},
+	},
   pages: {},
   callbacks: {},
 })
