@@ -30,7 +30,7 @@ importers:
         specifier: ^11.2.2
         version: 11.2.2(@nestjs/common@11.1.9(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.9)(reflect-metadata@0.2.2)
       '@prisma/client':
-        specifier: ^6.19.0
+        specifier: ^6.0.0
         version: 6.19.0(prisma@6.19.0(typescript@5.9.3))(typescript@5.9.3)
       passport:
         specifier: ^0.7.0
@@ -106,7 +106,7 @@ importers:
         specifier: ^3.4.2
         version: 3.6.2
       prisma:
-        specifier: ^6.19.0
+        specifier: ^6.0.0
         version: 6.19.0(typescript@5.9.3)
       source-map-support:
         specifier: ^0.5.21
