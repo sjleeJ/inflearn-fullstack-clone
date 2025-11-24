@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
+// nest프로젝트를 생성할 수 있게 해줌
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

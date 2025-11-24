@@ -6,13 +6,70 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// prisma-class-generator는 Prisma Schema에서 TypeScript 클래스를 자동 생성해주는 서드파티 제너레이터
+// 사용전 prisma 사용방식
+/*
+1. "prisma:generate": "dotenv -e .env -- prisma generate
+  생성되는 것:
+      export type Course = {  // ← 타입 (type)
+        id: string;
+        title: string;
+      }
+
+      export class PrismaClient {  // ← 클라이언트 API
+        course: {
+          create: () => Promise<Course>
+          findMany: () => Promise<Course[]>
+        }
+      }
+2. prisma-class-generator 사용시 추가로 설치되는 것
+    export class Course {  // ← 클래스 (class)
+      id: string;
+      title: string;
+  
+      constructor(data: any) {
+        Object.assign(this, data);
+      }
+    }
+
+결론: 현재는 타입만 자동 생성, 클래스 제너레이터는 클래스까지 추가로 생성해주는 별도 도구
+*/
+//Prisma: 타입 자동 생성
+// NestJS DTO: 수동으로 작성
+// @nestjs/mapped-types로 DTO 변형
+generator prismaClassGenerator {
+  provider               = "prisma-class-generator"
+  dryRun                 = "false"
+  /*
+      "true": 실제 파일 생성 안함, 콘솔에만 미리보기 출력
+      "false": 실제 클래스 파일들 생성
+  */
+  separateRelationFields = "false"
+  /*
+      "true": 관계 필드를 별도 파일로 분리
+      "false": 모든 필드를 하나의 클래스에 포함
+  */
+}
+
+// "prisma:generate 실행시 이제 type+class가 둘다 생김
+/*
+prisma generate 명령어로 여러 generator가 동시에 실행되는 방식
+schema.prisma에서 여러 generator 정의:
+
+      schema.prisma 파싱
+      모든 generator 블록 찾기
+      각 generator 순차 실행:
+
+      prisma-client-js 실행 → 타입 + PrismaClient 생성
+      prisma-class-generator 실행 → 클래스 생성
+*/
 
 model Account {
   id                String  @id @default(cuid())
@@ -75,6 +132,7 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+
 model Course {
   id               String   @id @default(uuid())
   slug             String   @unique
@@ -87,12 +145,13 @@ model Course {
   level            String   @default("BEGINEER")
   status           String   @default("DRAFT")
   instructorId     String   @map("instructor_id")
+  isPublished      Boolean  @default(false) @map("is_published")
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   sections    Section[]
   lectures    Lecture[]
-  categories  CourseCategory[]
+  categories    CourseCategory[]
   enrollments CourseEnrollment[]
   instructor  User               @relation(fields: [instructorId], references: [id])
   reviews     CourseReview[]
@@ -225,3 +284,65 @@ model LectureActivity {
   @@unique([userId, lectureId])
   @@map("lecture_activities")
 }
+/*
+1. prisma generate 실행시
+  1-1. schema.prisma 파일 읽기
+  1-2. TypeScript 타입 자동 생성
+  1-3. Prisma Client API 생성
+
+  이 일어남.
+
+2.node_modules/.prisma/client/index.d.ts (자동 생성)
+
+export class PrismaClient {
+  course: {
+    create: (args: CourseCreateArgs) => Promise<Course>
+    findMany: () => Promise<Course[]>
+    // ... 기타 CRUD 메서드들
+  }
+}
+
+// 타입도 자동 생성
+export type Course = {
+  id: string
+  title: string
+  instructorId: string
+  // ...
+}
+
+
+4. 서비스에서 사용
+typescript// PrismaService는 PrismaClient를 확장
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();  // ← DB 연결
+  }
+}
+
+CoursesService에서 주입받아 사용
+@Injectable()
+export class CoursesService {
+  constructor(private prisma: PrismaService) {}  // ← DI로 주입
+  
+  async create(userId: string, createCourseDto: CreateCourseDto) {
+    return this.prisma.course.create({  // ← 자동 생성된 API 사용
+      data: { }
+    });
+  }
+}
+
+**핵심 동작 원리:**
+
+### **컴파일 타임:**
+```
+schema.prisma → prisma generate → TypeScript Client 생성
+```
+
+### **런타임:**
+```
+this.prisma.course.create() → Query Engine → SQL 생성 → PostgreSQL
+*/
+
+
+
