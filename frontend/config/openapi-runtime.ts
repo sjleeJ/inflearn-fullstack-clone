@@ -4,6 +4,7 @@
 // 이 때 openapi-runtime.ts라는 것을 만들어서 실제 api호출전에 이 파일을 호출하고 나서 실제로 호출한다.
 
 
+
 import { CreateClientConfig } from "@/generated/openapi-client/client";
 import { getCookie } from "cookies-next/server";
 import { cookies } from "next/headers";
